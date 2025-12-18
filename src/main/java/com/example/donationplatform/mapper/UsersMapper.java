@@ -6,8 +6,18 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface UsersMapper {
+
+
     @Select("select * from users where mobile = #{mobile}")
     Users selectByMobile(String mobile);
     @Select("select * from users where id = #{userId}")
     Users selectById(long userId);
+
+    void updateUserLoginInfo(Users user);
+    @Select("select * from users where email = #{email}")
+    Users selectByEmail(String email);
+
+    void registerUser(Users users);
+    @Select("select * from users where id = #{id}")
+    Users getUserById(Long id);
 }

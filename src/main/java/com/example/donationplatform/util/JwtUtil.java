@@ -2,28 +2,25 @@ package com.example.donationplatform.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
-import java.util.Date;
-import java.util.Map;
+import java.security.Key;
 
 public class JwtUtil {
-    private static final String JWT_SECRET = "mySecretKey12345";
-    private static final long JWT_EXPIRATION = 1000L*60*60*3;
-
-    public static String generateToken(Long userId,String nickname){
+    private static final Key SECRET_KEY = Keys.hmacShaKeyFor("mySecretKey12345mySecretKey12345".getBytes());
+    private static final long JWT_EXPIRATION = 1000L * 60 * 60 * 3;
+    public static String generateToken(long userId, String nickName){
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .addClaims(Map.of("nickname",nickname))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256,JWT_SECRET)
+                .setExpiration(new java.util.Date(System.currentTimeMillis() + JWT_EXPIRATION))
+                .signWith(SECRET_KEY)
+                .claim("nickName", nickName)
                 .compact();
     }
-
-    public static Claims parseToken(String token){
-        return Jwts.parser()
-                .setSigningKey(JWT_SECRET)
+    public static Claims parseToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

@@ -18,19 +18,26 @@ public class LoginInterceptor implements HandlerInterceptor {
     private UsersService usersService;
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("进入拦截器");
+        log.info("token:{}", request.getHeader("Authorization"));
         String token = request.getHeader("Authorization");
         if (token == null || token.isEmpty()){
             return false;
         }
         try {
             Claims user = JwtUtil.parseToken(token.replace("Bearer ", ""));
+            log.info("解析token:{}", user);
             long userId = Long.parseLong(user.getSubject());
             Users users = usersService.selectById(userId);
             UserContext.setUser(users);
+            log.info("用户信息:{}", users);
         } catch (Exception e) {
+            log.error("解析token失败:{}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
+        log.info("用户信息:{}", UserContext.getUser());
+        log.info("放行");
         return true;
     }
 

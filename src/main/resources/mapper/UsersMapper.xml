@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.donationplatform.mapper.UsersMapper">
+    <insert id="registerUser" parameterType="com.example.donationplatform.entity.Users" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userType != null">user_type,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="mobile != null">mobile,</if>
+            <if test="email != null">email,</if>
+            <if test="password != null">password,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="status != null">status,</if>
+            <if test="lastLoginAt != null">last_login_at,</if>
+            <if test="lastLoginIp != null">last_login_ip,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="userType != null">#{userType},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="mobile != null">#{mobile},</if>
+            <if test="email != null">#{email},</if>
+            <if test="password != null">#{password},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastLoginAt != null">#{lastLoginAt},</if>
+            <if test="lastLoginIp != null">#{lastLoginIp},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateUserLoginInfo" parameterType="com.example.donationplatform.entity.Users">
+        UPDATE users
+        <set>
+            <if test="userType != null">
+                user_type = #{userType},
+            </if>
+            <if test="nickName != null">
+                nick_name = #{nickName},
+            </if>
+            <if test="mobile != null">
+                mobile = #{mobile},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="lastLoginAt != null">
+                last_login_at = #{lastLoginAt},
+            </if>
+            <if test="lastLoginIp != null">
+                last_login_ip = #{lastLoginIp},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime}
+            </if>
+        </set>
+        WHERE  mobile = #{mobile}
+    </update>
+</mapper>

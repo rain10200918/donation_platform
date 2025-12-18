@@ -2,8 +2,18 @@ spring:
   application:
    name: donation-platform
   datasource:
-    url: jdbc:mysql://localhost:3306/ssm?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/donation_platform?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.donationplatform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    com.example.donationplatform.mapper: debug
+    org.mybatis: debug
+    java.sql: debug
 
