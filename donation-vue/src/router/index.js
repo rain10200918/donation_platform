@@ -58,7 +58,8 @@ const routes = [
         meta: { requiresAuth: true, role: 1 }, // role: 1 表示只有管理员能进
         children: [
             { path: 'audit', component: () => import('@/views/admin/Audit.vue') },
-            { path: 'users' , component: () => import('@/views/admin/UserManagement.vue')}
+            { path: 'users' , component: () => import('@/views/admin/UserManagement.vue')},
+            { path: 'settings' , component: () => import('@/views/admin/Settings.vue')},
         ]
     },
 
