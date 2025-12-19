@@ -1,7 +1,9 @@
 package com.example.donationplatform.service;
 
 import com.example.donationplatform.dto.UsersRegisterDTO;
+import com.example.donationplatform.entity.Result;
 import com.example.donationplatform.entity.Users;
+import com.github.pagehelper.PageInfo;
 
 
 public interface UsersService {
@@ -14,4 +16,6 @@ public interface UsersService {
     void register(UsersRegisterDTO usersRegisterDTO);
 
     Users getUserById(Long id);
+
+    PageInfo<Users> getUserList(Integer pageNum, Integer pageSize, String nickName, String status);
 }

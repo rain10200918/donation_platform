@@ -4,6 +4,8 @@ import com.example.donationplatform.entity.Users;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface UsersMapper {
 
@@ -20,4 +22,6 @@ public interface UsersMapper {
     void registerUser(Users users);
     @Select("select * from users where id = #{id}")
     Users getUserById(Long id);
+
+    List<Users> getUserList(Integer pageNum, Integer pageSize, String nickName, String status);
 }

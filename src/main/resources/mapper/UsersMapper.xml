@@ -69,4 +69,17 @@
         </set>
         WHERE  mobile = #{mobile}
     </update>
+    <select id="getUserList" resultType="com.example.donationplatform.entity.Users">
+        SELECT * FROM users
+        <where>
+            <if test="nickName != null and nickName != ''">
+                AND nick_name LIKE CONCAT('%', #{nickName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+
+        </where>
+        ORDER BY create_time DESC
+    </select>
 </mapper>

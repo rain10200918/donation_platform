@@ -42,4 +42,14 @@ public class ProjectServiceImpl implements ProjectService {
         List<Projects> byStatus = projectsMapper.getByStatus(status);
         return new PageInfo<>(byStatus);
     }
+
+    @Override
+    public int countByStatus(int i) {
+        return projectsMapper.countByStatus(i);
+    }
+
+    @Override
+    public int sumTargetAmount() {
+        return projectsMapper.sumTargetAmount();
+    }
 }

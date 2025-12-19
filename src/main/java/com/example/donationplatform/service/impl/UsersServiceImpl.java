@@ -8,11 +8,14 @@ import com.example.donationplatform.service.UsersService;
 import com.example.donationplatform.util.JwtUtil;
 import com.example.donationplatform.util.MD5Util;
 import com.example.donationplatform.util.ValidatorUtils;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.example.donationplatform.constant.Constant.PERSON_TYPE;
 import static com.example.donationplatform.constant.Constant.USER_STATUS_NORMAL;
@@ -82,5 +85,12 @@ public class UsersServiceImpl implements UsersService {
     public Users getUserById(Long id) {
         Users users = usersMapper.getUserById(id);
         return users;
+    }
+
+    @Override
+    public PageInfo<Users> getUserList(Integer pageNum, Integer pageSize, String nickName, String status) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<Users> userList = usersMapper.getUserList(pageNum, pageSize, nickName, status);
+        return new PageInfo<>(userList);
     }
 }

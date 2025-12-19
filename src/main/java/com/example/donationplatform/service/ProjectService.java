@@ -15,4 +15,8 @@ public interface ProjectService {
     List<Projects> getByInitiatorId(Long id);
 
     PageInfo<Projects> getByStatus(String status, Integer pageNum, Integer pageSize);
+
+    int countByStatus(int i);
+
+    int sumTargetAmount();
 }

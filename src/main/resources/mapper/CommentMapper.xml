@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.donationplatform.mapper.CommentMapper">
+    <insert id="insert" parameterType="com.example.donationplatform.entity.Comment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project_comments (
+            project_id,
+            user_id,
+            reply_user_id,
+            parent_id,
+            content,
+            is_donor,
+            status,
+            create_time
+        ) VALUES (
+                     #{projectId},
+                     #{userId},
+                     #{replyUserId},
+                     #{parentId},
+                     #{content},
+                     #{isDonor},
+                     #{status},
+                     NOW()
+                 )
+    </insert>
+    <select id="selectChildrenByParentIds" resultType="com.example.donationplatform.vo.CommentVO">
+        SELECT
+        c.id,
+        c.project_id as projectId,
+        c.user_id as userId,
+        c.parent_id as parentId,
+        c.reply_user_id as replyUserId,
+        c.content,
+        c.create_time as createTime,
+        c.status,        c.is_donor as isDonor, u1.nick_name as nickName,
+        u1.avatar as avatar,
+        u2.nick_name as replyNickName
+        FROM project_comments c
+        LEFT JOIN users u1 ON c.user_id = u1.id
+        LEFT JOIN users u2 ON c.reply_user_id = u2.id
+        WHERE c.status >= 0
+        AND c.parent_id IN
+        <foreach collection="rootIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY c.create_time ASC
+    </select>
+    <select id="selectRootComments" resultType="com.example.donationplatform.entity.Comment">
+        SELECT
+            c.*,
+            u.nick_name AS nickName,
+            u.avatar AS avatar
+        FROM project_comments c
+                 LEFT JOIN users u ON c.user_id = u.id
+        WHERE c.project_id = #{projectId}
+          AND c.parent_id = 0
+          AND c.status >= 0
+        ORDER BY c.create_time DESC
+    </select>
+</mapper>
