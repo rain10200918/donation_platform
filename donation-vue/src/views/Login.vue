@@ -91,12 +91,31 @@ const handleLogin = async () => {
     if (valid) {
       loading.value = true
       try {
+        // 第一步：获取 token
         const res = await request.post('/user/login', loginForm)
-        sessionStorage.setItem('token', res.data)
-        ElMessage.success('登录成功，欢迎回来')
-        await router.push('/home')
+        const token = res.data
+        sessionStorage.setItem('token', token)
+
+        // 第二步：拿着 token 去获取用户信息（包含 role）
+        // 确保你的 request.js 拦截器已经配置好在请求头带上 token
+        const userRes = await request.get('/user/info')
+
+        if (userRes.code === "200") {
+          const userInfo = userRes.data
+          sessionStorage.setItem('userInfo', JSON.stringify(userInfo))
+
+          ElMessage.success('登录成功，欢迎回来')
+
+          // 第三步：根据角色分流
+          if (userInfo.role == 1) {
+            router.push('/admin/audit') // 管理员去后台
+          } else {
+            router.push('/home') // 普通用户去前台
+          }
+        }
       } catch (err) {
-        ElMessage.error(err.response?.data?.message || '手机号或密码错误')
+        console.error(err)
+        ElMessage.error(err.response?.data?.message || '登录失败，请检查账号密码')
       } finally {
         loading.value = false
       }

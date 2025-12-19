@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import {ElMessage} from "element-plus";
 
 const routes = [
     // --- 1. 需要导航栏的页面组 (父子结构) ---
@@ -51,6 +52,14 @@ const routes = [
             }
         ]
     },
+    {
+        path: '/admin',
+        component: () => import('@/views/AdminLayout.vue'),
+        meta: { requiresAuth: true, role: 1 }, // role: 1 表示只有管理员能进
+        children: [
+            { path: 'audit', component: () => import('@/views/admin/Audit.vue') }
+        ]
+    },
 
     // --- 2. 不需要通用导航栏的独立页面 ---
     {
@@ -85,13 +94,37 @@ const router = createRouter({
 // 全局守卫逻辑保持不变（无需改动）
 router.beforeEach((to, from, next) => {
     const token = sessionStorage.getItem('token')
-    if (to.meta.title) document.title = to.meta.title
+    // 获取完整的用户信息对象
+    const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}')
 
-    if (to.meta.requiresAuth && !token) {
-        next({ path: '/login', query: { redirect: to.fullPath } })
-    } else if (token && (to.path === '/login' || to.path === '/register')) {
+    // 调试日志：在开发阶段非常有用，能让你看清守卫里拿到了什么
+    console.log('路由守卫检查:', {
+        path: to.path,
+        token: !!token,
+        role: userInfo.role,
+        roleType: typeof userInfo.role
+    })
+
+    // 判断逻辑：
+    // 1. 如果访问的是后台页面 (以 /admin 开头)
+    if (to.path.startsWith('/admin')) {
+        // 使用 == 兼容字符串 "1" 和数字 1
+        if (token && userInfo.role == 1) {
+            next() // 权限匹配，放行
+        } else {
+            // 如果已经登录但不是管理员，提示权限不足
+            if (token) {
+                ElMessage.warning('您的账号没有管理员权限')
+            }
+            next('/home') // 踢回首页
+        }
+    }
+    // 2. 如果是去登录页，但已经登录了，直接去首页
+    else if (to.path === '/login' && token) {
         next('/home')
-    } else {
+    }
+    // 3. 其他情况正常放行
+    else {
         next()
     }
 })
