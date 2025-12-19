@@ -1,10 +1,14 @@
 <template>
   <div class="login-container">
+    <div class="background-image"></div>
+    <div class="background-overlay"></div>
+
     <el-card class="login-card">
       <template #header>
         <div class="login-header">
-          <h2 class="login-title">❤️ 公益众筹平台</h2>
-          <p class="login-subtitle">传递爱心，温暖每一个角落</p>
+          <div class="heart-icon">❤️</div>
+          <h2 class="login-title">公益众筹平台</h2>
+          <p class="login-subtitle">每一份善心，都是改变世界的力量</p>
         </div>
       </template>
 
@@ -30,20 +34,25 @@
 
         <el-form-item>
           <el-button
-              type="primary"
+              type="danger"
               @click="handleLogin"
               :loading="loading"
-              class="login-btn"
+              class="login-btn glow-btn"
           >
-            登 录
+            开启爱心之旅
           </el-button>
         </el-form-item>
 
         <div class="login-footer">
-          <span>还没有账号？</span>
-          <el-link type="primary" @click="router.push('/register')">立即注册</el-link>
+          <span>加入我们，成为传递者</span>
+          <el-link type="danger" :underline="false" @click="router.push('/register')">立即注册</el-link>
         </div>
       </el-form>
+
+      <div class="trust-badge">
+        <el-icon><CircleCheck /></el-icon>
+        <span>平台已受法律监管，确保资金安全透明</span>
+      </div>
     </el-card>
   </div>
 </template>
@@ -52,7 +61,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, CircleCheck } from '@element-plus/icons-vue'
 import request from '../utils/request.js'
 
 const router = useRouter()
@@ -67,7 +76,7 @@ const loginForm = reactive({
 const rules = {
   mobile: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '格式不正确', trigger: 'blur' }
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的11位手机号', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -83,14 +92,11 @@ const handleLogin = async () => {
       loading.value = true
       try {
         const res = await request.post('/user/login', loginForm)
-        // 确保清除旧的再存入新的，防止冲突
-        sessionStorage.removeItem('token')
         sessionStorage.setItem('token', res.data)
-
         ElMessage.success('登录成功，欢迎回来')
         await router.push('/home')
       } catch (err) {
-        ElMessage.error(err.response?.data?.message || '登录失败，请检查网络')
+        ElMessage.error(err.response?.data?.message || '手机号或密码错误')
       } finally {
         loading.value = false
       }
@@ -102,17 +108,47 @@ const handleLogin = async () => {
 <style scoped>
 .login-container {
   height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 使用与注册页/首页一致的渐变色 */
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 核心：背景图片 */
+.background-image {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070');
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+  transition: transform 10s ease-in-out;
+}
+
+/* 动态背景感：慢慢放大 */
+.login-container:hover .background-image {
+  transform: scale(1.1);
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* 带有品牌色的半透明渐变，让文案更清晰 */
+  background: linear-gradient(135deg, rgba(245, 108, 108, 0.4) 0%, rgba(30, 41, 59, 0.7) 100%);
+  z-index: -1;
 }
 
 .login-card {
   width: 420px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  /* 毛玻璃效果 */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: none;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  padding: 10px;
 }
 
 .login-header {
@@ -120,39 +156,76 @@ const handleLogin = async () => {
   padding: 10px 0;
 }
 
+.heart-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+  animation: heartbeat 1.5s infinite;
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}
+
 .login-title {
   margin: 0;
-  font-size: 24px;
-  color: #409eff;
-  font-weight: bold;
+  font-size: 26px;
+  color: #f56c6c; /* 使用温情的红色 */
+  letter-spacing: 1px;
 }
 
 .login-subtitle {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: 14px;
-  color: #909399;
+  color: #64748b;
 }
 
 .login-btn {
   width: 100%;
-  height: 45px;
+  height: 50px;
   font-size: 16px;
-  border-radius: 8px;
-  margin-top: 10px;
+  font-weight: bold;
+  border-radius: 12px;
+  margin-top: 15px;
+  transition: 0.3s;
+}
+
+.glow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(245, 108, 108, 0.3);
 }
 
 .login-footer {
   text-align: center;
-  margin-top: 15px;
+  margin-top: 20px;
   font-size: 14px;
-  color: #606266;
+  color: #64748b;
+}
+
+.login-footer .el-link {
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+.trust-badge {
+  margin-top: 25px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #10b981;
+  font-size: 12px;
 }
 
 /* 适配移动端 */
 @media (max-width: 480px) {
   .login-card {
     width: 90%;
-    margin: 20px;
   }
 }
 </style>
