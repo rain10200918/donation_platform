@@ -5,10 +5,10 @@
         <div class="logo">❤️ 公益众筹平台</div>
         <el-menu mode="horizontal" :ellipsis="false" class="menu" default-active="1">
           <el-menu-item index="1" @click="router.push('/home')">首页</el-menu-item>
-          <el-menu-item index="2">项目浏览</el-menu-item>
+          <el-menu-item index="2" @click="router.push('/projects')">项目浏览</el-menu-item>
           <el-menu-item index="3">信息公开</el-menu-item>
           <div class="flex-grow" />
-          <el-button type="primary" class="publish-btn" @click="handlePublish">发起求助</el-button>
+          <el-button type="primary" class="publish-btn" @click="handlePublish" style="margin-top: 13px">发起求助</el-button>
           <el-dropdown>
             <span class="user-info">
               <el-avatar :size="32" :src="userInfo.avatar || defaultAvatar" />
@@ -18,6 +18,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="router.push('/profile')">个人中心</el-dropdown-item>
                 <el-dropdown-item>我的捐赠</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/my-projects')">我的求助</el-dropdown-item>
                 <el-dropdown-item divided @click="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -58,10 +59,10 @@
             <el-col :span="8" v-for="p in projects" :key="p.id">
               <el-card class="project-card" :body-style="{ padding: '0px' }">
                 <div class="image-wrapper">
-                  <el-tag class="type-tag" :type="getTypeTag(p.project_type)">
-                    {{ getTypeText(p.project_type) }}
+                  <el-tag class="type-tag" :type="getTypeTag(p.projectType)">
+                    {{ getTypeText(p.projectType) }}
                   </el-tag>
-                  <img :src="getCover(p.project_type)" class="image" />
+                  <img :src="getCover(p.projectType)" class="image" />
                 </div>
 
                 <div style="padding: 14px">
@@ -71,18 +72,18 @@
 
                     <div class="progress-box">
                       <div class="progress-label">
-                        <span>进度: {{ calculatePercent(p.raised_amount, p.target_amount) }}%</span>
-                        <span>已筹: ¥{{ p.raised_amount }}</span>
+                        <span>进度: {{ calculatePercent(p.raisedAmount, p.targetAmount) }}%</span>
+                        <span>已筹: ¥{{ p.raisedAmount }}</span>
                       </div>
                       <el-progress
-                          :percentage="calculatePercent(p.raised_amount, p.target_amount)"
+                          :percentage="calculatePercent(p.raisedAmount, p.targetAmount)"
                           :status="p.status === 2 ? 'success' : ''"
                           :show-text="false"
                       />
                     </div>
 
                     <div class="p-footer">
-                      <span class="target">目标: ¥{{ p.target_amount }}</span>
+                      <span class="target">目标: ¥{{ p.targetAmount }}</span>
                       <el-button type="primary" size="small" plain @click="goDetail(p.id)">项目详情</el-button>
                     </div>
                   </div>
@@ -100,7 +101,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import request from '../utils/request.js' // 导入你配置了拦截器的请求工具
+import request from '../utils/request.js' // 导入配置了拦截器的请求工具
 
 const router = useRouter()
 
@@ -124,24 +125,36 @@ const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726
 // 初始化加载数据
 const loadHomeData = async () => {
   try {
-    // 1. 获取项目列表 (对应你的 projects 表，通常查询状态为 1-募集中 的)
-    //const res = await request.get('/project/list', { params: { status: 1 } })
-    //projects.value = res // 因为你的拦截器写了 return response.data
+    // 1. 获取项目分页列表 (对应你后端的 /project/list 接口)
+    const projectRes = await request.get('/project/page', {
+      params: { page: 1, size: 6 }
+    })
 
-    // 2. 模拟或从后端获取统计数据 (如果你有聚合接口)
-    // const stats = await request.get('/project/stats')
-    // totalRaised.value = stats.total_money
-
-    const res = await request.get('/user/info')
-
-    if (res.code === "200") {
-      userInfo.value = res.data
+    if (projectRes.code === "200") {
+      projects.value = projectRes.data.list
     }
-    totalRaised.value = 1258000 // 暂时写死，以后可改
+
+    // 2. 获取用户信息
+    const userRes = await request.get('/user/info')
+    if (userRes.code === "200") {
+      userInfo.value = userRes.data
+    }
+
+    // 3. 获取统计数据 (如果你后端写了统计接口)
+    // const statsRes = await request.get('/project/statistics')
+    // if (statsRes.code === "200") {
+    //   totalRaised.value = statsRes.data.totalRaised
+    //   totalDonations.value = statsRes.data.totalCount
+    // } else {
+    // 后端没写前先保持模拟
+    totalRaised.value = 1258000
     totalDonations.value = 45600
     completedProjects.value = 128
+    // }
+
   } catch (err) {
-    ElMessage.error('获取项目列表失败')
+    console.error('加载首页数据失败', err)
+    // ElMessage.error('获取项目列表失败') // 屏蔽非必要报错，提升体验
   }
 }
 
@@ -178,8 +191,54 @@ const goDetail = (id) => {
   router.push(`/project/${id}`)
 }
 
-const handlePublish = () => {
-  router.push('/publish') // 以后可以写发起求助页
+const handlePublish = async () => {
+  const token = sessionStorage.getItem('token')
+  if (!token) {
+    ElMessage.error('请先登录后再发起求助')
+    router.push('/login')
+    return
+  }
+  try {
+    // 1. 调用你之前写好的获取认证详情接口
+    const res = await request.get('/user-auth/detail')
+
+    // 2. 根据 code 和 data 判断状态 (适配“不剥壳”模式)
+    if (res.code === "200") {
+      const auth = res.data
+
+      // 情况 A: 根本没有认证记录
+      if (!auth) {
+        showAuthConfirm('您尚未进行实名认证，请先完成认证以确保项目真实性。')
+        return
+      }
+
+      // 情况 B: 认证通过 (状态 1)
+      if (auth.authStatus === 1) {
+        router.push('/publish')
+      }
+      // 情况 C: 审核中 (状态 0)
+      else if (auth.authStatus === 0) {
+        ElMessage.warning('您的实名认证正在审核中，请稍后再试')
+      }
+      // 情况 D: 被驳回 (状态 2)
+      else if (auth.authStatus === 2) {
+        showAuthConfirm(`您的实名认证已被驳回（原因：${auth.rejectReason}），请修改后重新提交。`)
+      }
+    }
+  } catch (err) {
+    ElMessage.error('权限检查失败，请稍后重试')
+  }
+}
+
+// 抽取一个公共的弹窗引导方法
+const showAuthConfirm = (message) => {
+  ElMessageBox.confirm(message, '身份校验', {
+    confirmButtonText: '去认证',
+    cancelButtonText: '取消',
+    type: 'info'
+  }).then(() => {
+    router.push('/user-auth') // 跳转到你写的认证页面
+  }).catch(() => {})
 }
 
 const logout = () => {

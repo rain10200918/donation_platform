@@ -32,6 +32,26 @@ const routes = [
         path: '/user-auth',
         name: 'UserAuth',
         component: () => import('@/views/UserAuth.vue')
+    },
+    {
+        path: '/publish',
+        name: 'Publish',
+        component: () => import('@/views/Publish.vue')
+    },
+    {
+        path: '/project/:id',
+        name: 'ProjectDetail',
+        component: () => import('@/views/ProjectDetail.vue')
+    },
+    {
+        path: '/my-projects',
+        name: 'MyProjects',
+        component: () => import('@/views/MyProjects.vue')
+    },
+    {
+        path: '/projects',
+        name: 'Projects',
+        component: () => import('../views/Projects.vue')
     }
 ]
 
