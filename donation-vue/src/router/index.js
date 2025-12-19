@@ -1,11 +1,58 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// 使用路由懒加载，提高首屏加载速度
 const routes = [
+    // --- 1. 需要导航栏的页面组 (父子结构) ---
     {
         path: '/',
-        redirect: '/home' // 建议默认去首页，由守卫决定是否跳回登录
+        component: () => import('@/views/Layout.vue'), // 这里的父组件包含 Header
+        redirect: '/home',
+        children: [
+            {
+                path: 'home',
+                name: 'Home',
+                component: () => import('@/views/Home.vue'),
+                meta: { requiresAuth: true, title: '首页' }
+            },
+            {
+                path: 'projects',
+                name: 'Projects',
+                component: () => import('@/views/Projects.vue'),
+                meta: { title: '项目浏览' }
+            },
+            {
+                path: 'profile',
+                name: 'Profile',
+                component: () => import('@/views/Profile.vue'),
+                meta: { requiresAuth: true, title: '个人中心' }
+            },
+            {
+                path: 'my-projects',
+                name: 'MyProjects',
+                component: () => import('@/views/MyProjects.vue'),
+                meta: { requiresAuth: true, title: '我的求助' }
+            },
+            {
+                path: 'project/:id',
+                name: 'ProjectDetail',
+                component: () => import('@/views/ProjectDetail.vue'),
+                meta: { title: '项目详情' }
+            },
+            {
+                path: '/story/1',
+                name: 'Story1',
+                component: () => import('@/views/stories/StoryApple.vue'),
+                meta: { title: '项目故事-小苹果的微笑' }
+            },
+            {
+                path: '/story/2',
+                name: 'Story2',
+                component: () => import('@/views/stories/StoryBooks.vue'),
+                meta: { title: '项目故事-大山里的书声' }
+            }
+        ]
     },
+
+    // --- 2. 不需要通用导航栏的独立页面 ---
     {
         path: '/login',
         name: 'Login',
@@ -17,41 +64,16 @@ const routes = [
         component: () => import('../views/Register.vue')
     },
     {
-        path: '/home',
-        name: 'Home',
-        component: () => import('@/views/Home.vue'),
-        // meta 字段：requiresAuth 表示这个页面必须登录才能看
-        meta: { requiresAuth: true, title: '公益众筹-首页' }
-    },
-    {
-        path: '/profile',
-        name: 'Profile',
-        component: () => import('@/views/Profile.vue'),
-    },
-    {
         path: '/user-auth',
         name: 'UserAuth',
-        component: () => import('@/views/UserAuth.vue')
+        component: () => import('@/views/UserAuth.vue'),
+        meta: { requiresAuth: true }
     },
     {
         path: '/publish',
         name: 'Publish',
-        component: () => import('@/views/Publish.vue')
-    },
-    {
-        path: '/project/:id',
-        name: 'ProjectDetail',
-        component: () => import('@/views/ProjectDetail.vue')
-    },
-    {
-        path: '/my-projects',
-        name: 'MyProjects',
-        component: () => import('@/views/MyProjects.vue')
-    },
-    {
-        path: '/projects',
-        name: 'Projects',
-        component: () => import('../views/Projects.vue')
+        component: () => import('@/views/Publish.vue'),
+        meta: { requiresAuth: true }
     }
 ]
 
@@ -60,28 +82,16 @@ const router = createRouter({
     routes
 })
 
-// 全局前置守卫
+// 全局守卫逻辑保持不变（无需改动）
 router.beforeEach((to, from, next) => {
     const token = sessionStorage.getItem('token')
+    if (to.meta.title) document.title = to.meta.title
 
-    // 设置页面标题（可选）
-    if (to.meta.title) {
-        document.title = to.meta.title
-    }
-
-    // 逻辑 A：如果页面需要登录 (requiresAuth)，但用户没 Token，直接踢回登录页
     if (to.meta.requiresAuth && !token) {
-        next({
-            path: '/login',
-            query: { redirect: to.fullPath } // 保存用户刚才想去的页面，登录后可以跳回来
-        })
-    }
-    // 逻辑 B：如果用户已经登录了，还想去登录或注册页，直接送回首页
-    else if (token && (to.path === '/login' || to.path === '/register')) {
+        next({ path: '/login', query: { redirect: to.fullPath } })
+    } else if (token && (to.path === '/login' || to.path === '/register')) {
         next('/home')
-    }
-    // 逻辑 C：其他情况正常放行
-    else {
+    } else {
         next()
     }
 })

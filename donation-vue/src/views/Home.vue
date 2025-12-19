@@ -1,42 +1,6 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header class="header">
-        <div class="logo">
-          <span class="heart-icon">❤️</span>
-          <span class="logo-text">公益众筹平台</span>
-        </div>
-
-        <el-menu mode="horizontal" :ellipsis="false" class="menu" default-active="1">
-          <el-menu-item index="1" @click="router.push('/home')">首页</el-menu-item>
-          <el-menu-item index="2" @click="router.push('/projects')">项目浏览</el-menu-item>
-          <el-menu-item index="3">信息公开</el-menu-item>
-
-          <div class="flex-grow" />
-
-          <div class="header-right">
-            <el-button type="danger" class="publish-btn glow-btn" @click="handlePublish">
-              发起求助
-            </el-button>
-
-            <el-dropdown>
-              <span class="user-info">
-                <el-avatar :size="36" :src="userInfo.avatar || defaultAvatar" class="user-avatar" />
-                <span class="username">{{ userInfo.nickName }}</span>
-              </span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="router.push('/profile')">个人中心</el-dropdown-item>
-                  <el-dropdown-item>我的捐赠</el-dropdown-item>
-                  <el-dropdown-item @click="router.push('/my-projects')">我的求助</el-dropdown-item>
-                  <el-dropdown-item divided @click="logout" style="color: #f56c6c">退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </el-menu>
-      </el-header>
-
       <el-main class="main-content">
         <el-carousel height="520px" motion-blur class="banner">
           <el-carousel-item v-for="item in banners" :key="item.id">
@@ -48,7 +12,7 @@
                 <p class="banner-desc">{{ item.desc }}</p>
                 <div class="banner-actions">
                   <el-button type="danger" size="large" class="glow-btn">立即提供帮助</el-button>
-                  <el-button size="large" plain class="white-btn">了解项目故事</el-button>
+                  <el-button size="large" plain class="white-btn" @click="router.push(item.link)">了解项目故事</el-button>
                 </div>
               </div>
             </div>
@@ -159,8 +123,20 @@ const userInfo = ref({ nickName: '未登录', avatar: '' })
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 const banners = ref([
-  { id: 1, title: '山村小学图书室计划', desc: '让每一个孩子都能在书海翱翔', img: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2000' },
-  { id: 2, title: '紧急救援：灾后重建', desc: '众志成城，重建家园', img: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?q=80&w=2000' }
+  {
+    id: 1,
+    title: '山村小学图书室计划',
+    desc: '让每一个孩子都能在书海翱翔',
+    img: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2000',
+    link: '/story/2' // 对应大山书声故事
+  },
+  {
+    id: 2,
+    title: '先心病女孩的微笑',
+    desc: '众志成城，让“小苹果”重获新生',
+    img: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=2000',
+    link: '/story/1' // 对应小苹果故事
+  }
 ])
 
 // 初始化加载数据

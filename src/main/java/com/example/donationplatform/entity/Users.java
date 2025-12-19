@@ -51,5 +51,7 @@ public class Users {
 
     /** 更新时间 */
     private LocalDateTime updateTime;
+    /** 角色权限 */
+    private String role;
 }
 

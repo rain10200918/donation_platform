@@ -219,7 +219,7 @@ const fetchMyProjects = async () => {
 }
 
 // 映射逻辑
-const getTypeText = (type) => ({ "1": '个人求助者', "2": '公益机构' }[type] || '爱心人士')
+const getTypeText = (type) => ({ "1": '个人求助者', "2": '公益机构' }[type] || '认证企业')
 
 const getStatusText = (s, audit) => {
   if (audit === 0) return '待审核'
