@@ -16,4 +16,6 @@ public interface ProjectsMapper {
     Projects getById(Long id);
     @Select("select * from projects where initiator_id = #{id}")
     List<Projects> getByInitiatorId(Long id);
+    @Select("select * from projects where audit_status = #{status}")
+    List<Projects> getByStatus(String status);
 }

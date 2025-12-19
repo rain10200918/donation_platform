@@ -35,4 +35,11 @@ public class ProjectServiceImpl implements ProjectService {
     public List<Projects> getByInitiatorId(Long id) {
         return projectsMapper.getByInitiatorId(id);
     }
+
+    @Override
+    public PageInfo<Projects> getByStatus(String status, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<Projects> byStatus = projectsMapper.getByStatus(status);
+        return new PageInfo<>(byStatus);
+    }
 }

@@ -68,9 +68,53 @@ const fetchUser = async () => {
   if (res.code === "200") userInfo.value = res.data
 }
 
-const handlePublish = () => {
-  // 这里放入你之前的权限校验逻辑
-  router.push('/publish')
+/**
+ * 核心逻辑：发起求助校验
+ */
+const handlePublish = async () => {
+  if (!token) {
+    ElMessage.warning('请先登录后再发起求助')
+    return router.push('/login')
+  }
+
+  try {
+    // 1. 调用后端接口获取实名认证详情
+    const res = await request.get('/user-auth/detail')
+
+    // 如果返回 code 200 但 data 为空，说明数据库 user_auth 表里还没这条记录
+    if (res.code === "200") {
+      const authData = res.data
+
+      if (!authData) {
+        // 情况 A: 没记录 -> 未认证
+        showAuthConfirm('发起求助需先完成实名认证')
+      } else if (authData.authStatus === 1) {
+        // 情况 B: 状态为 1 -> 已通过
+        router.push('/publish')
+      } else if (authData.authStatus === 0) {
+        // 情况 C: 状态为 0 -> 审核中
+        ElMessageBox.alert('您的实名认证正在审核中，请稍后再试。', '提醒')
+      } else if (authData.authStatus === 2) {
+        // 情况 D: 状态为 2 -> 被驳回
+        showAuthConfirm(`实名认证被驳回：${authData.rejectReason || '信息不符'}`)
+      }
+    } else {
+      ElMessage.error(res.message || '获取认证信息失败')
+    }
+  } catch (err) {
+    ElMessage.error('权限检查失败')
+  }
+}
+
+// 引导认证的公共弹窗
+const showAuthConfirm = (title) => {
+  ElMessageBox.confirm(title, '权限提醒', {
+    confirmButtonText: '去认证',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    router.push('/user-auth')
+  })
 }
 
 const logout = () => {
@@ -82,7 +126,6 @@ onMounted(fetchUser)
 </script>
 
 <style scoped>
-/* 这里的样式直接复用你之前 Home.vue 里的 .header 相关样式 */
 .header {
   display: flex; align-items: center; background: rgba(255,255,255,0.98);
   height: 70px; padding: 0 60px; position: sticky; top: 0; z-index: 1000;
@@ -93,6 +136,7 @@ onMounted(fetchUser)
 .menu { flex: 1; border: none !important; }
 .flex-grow { flex-grow: 1; }
 .header-right { display: flex; align-items: center; gap: 20px; }
-.page-container { padding: 0; background-color: #f8fafc; }
+.page-container { padding: 0; background-color: #f8fafc; min-height: calc(100vh - 70px); }
 .user-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.username { font-weight: 500; }
 </style>

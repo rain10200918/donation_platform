@@ -13,4 +13,6 @@ public interface ProjectService {
     Projects getById(Long id);
 
     List<Projects> getByInitiatorId(Long id);
+
+    PageInfo<Projects> getByStatus(String status, Integer pageNum, Integer pageSize);
 }
