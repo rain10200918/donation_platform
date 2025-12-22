@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.donationplatform.mapper.WalletLogMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+            INSERT INTO wallet_logs
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="userId != null">user_id,</if>
+                <if test="type != null">type,</if>
+                <if test="amount != null">amount,</if>
+                <if test="balanceAfter != null">balance_after,</if>
+                <if test="remark != null">remark,</if>
+                create_time
+            </trim>
+            <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+                <if test="userId != null">#{userId},</if>
+                <if test="type != null">#{type},</if>
+                <if test="amount != null">#{amount},</if>
+                <if test="balanceAfter != null">#{balanceAfter},</if>
+                <if test="remark != null">#{remark},</if>
+                NOW()
+            </trim>
+        </insert>
+
+</mapper>

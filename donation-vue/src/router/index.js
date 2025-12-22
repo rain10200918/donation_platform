@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import {ElMessage} from "element-plus";
 
 const routes = [
-    // --- 1. 需要导航栏的页面组 (父子结构) ---
     {
         path: '/',
         component: () => import('@/views/Layout.vue'), // 这里的父组件包含 Header
@@ -49,6 +48,17 @@ const routes = [
                 name: 'Story2',
                 component: () => import('@/views/stories/StoryBooks.vue'),
                 meta: { title: '项目故事-大山里的书声' }
+            },
+            {
+                path: '/update-progress',
+                name: 'UpdateProgress',
+                component: () => import('../views/UpdateProgress.vue')
+            },
+            {
+                path: '/publish',
+                name: 'Publish',
+                component: () => import('@/views/Publish.vue'),
+                meta: { requiresAuth: true }
             }
         ]
     },
@@ -60,6 +70,7 @@ const routes = [
             { path: 'audit', component: () => import('@/views/admin/Audit.vue') },
             { path: 'users' , component: () => import('@/views/admin/UserManagement.vue')},
             { path: 'settings' , component: () => import('@/views/admin/Settings.vue')},
+            { path: 'profile' ,component: () => import('@/views/admin/Profile.vue')}
         ]
     },
 
@@ -80,12 +91,7 @@ const routes = [
         component: () => import('@/views/UserAuth.vue'),
         meta: { requiresAuth: true }
     },
-    {
-        path: '/publish',
-        name: 'Publish',
-        component: () => import('@/views/Publish.vue'),
-        meta: { requiresAuth: true }
-    }
+
 ]
 
 const router = createRouter({

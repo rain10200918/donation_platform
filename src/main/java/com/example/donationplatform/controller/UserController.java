@@ -10,6 +10,9 @@ import com.example.donationplatform.util.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -41,5 +44,19 @@ public class UserController {
         Users user = UserContext.getUser();
         Users users = usersServiceImpl.getUserById(user.getId());
         return Result.success(users);
+    }
+    @PostMapping("/update")
+    public Result update(@RequestBody Users  users ){
+     return null;
+    }
+    @PostMapping("/recharge")
+    public Result recharge(@RequestBody Map<String, Object> params){
+        Long userId = UserContext.getUser().getId();
+        BigDecimal amount = new BigDecimal(params.get("amount").toString());
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return Result.error("充值金额必须大于0");
+        }
+        usersServiceImpl.recharge(userId, amount);
+        return Result.success("充值成功");
     }
 }

@@ -9,6 +9,7 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="projectType != null">project_type,</if>
             <if test="title != null">title,</if>
+            <if test="picture != null">picture,</if>
             <if test="summary != null">summary,</if>
             <if test="initiatorId != null">initiator_id,</if>
             <if test="targetAmount != null">target_amount,</if>
@@ -24,6 +25,7 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="projectType != null">#{projectType},</if>
             <if test="title != null">#{title},</if>
+            <if test="picture != null">#{picture},</if>
             <if test="summary != null">#{summary},</if>
             <if test="initiatorId != null">#{initiatorId},</if>
             <if test="targetAmount != null">#{targetAmount},</if>

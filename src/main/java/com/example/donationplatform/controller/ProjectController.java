@@ -38,18 +38,22 @@ public class ProjectController {
     public Result publish(@RequestBody Projects projects){
         Users user = UserContext.getUser();
         if (user == null) return Result.error("未登录");
+        if (projects.getTitle() == null || projects.getPicture() == null) {
+            return Result.error("项目标题和封面图不能为空");
+        }
         UserAuth userauth = userAuthService.getDetailById(user.getId());
         if (userauth == null) return Result.error("用户未认证");
         if (userauth.getAuthStatus() != 1) return Result.error("未通过实名认证，无法发起项目");
         projects.setInitiatorId(user.getId());
         projects.setAuditStatus(0);
         projects.setStatus(0);
+        projects.setPicture(projects.getPicture());
         projects.setRaisedAmount(BigDecimal.ZERO);
         projects.setStartTime(LocalDateTime.now());
         projects.setCreateTime(LocalDateTime.now());
         projects.setUpdateTime(LocalDateTime.now());
         projectService.save(projects);
-        return Result.success("发布成功");
+        return Result.success("发布成功，请耐心等待系统审核");
     }
     @GetMapping("/detail/{id}")
     public Result detail(@PathVariable Long id){

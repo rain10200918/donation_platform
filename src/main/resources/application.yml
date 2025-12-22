@@ -16,4 +16,9 @@ logging:
     com.example.donationplatform.mapper: debug
     org.mybatis: debug
     java.sql: debug
-
+myaliyun:
+  alioss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    access-key-id: ${OSS_ACCESS_KEY_ID:请在环境变量中配置ID}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:请在环境变量中配置Secret}
+    bucket-name: zqh04

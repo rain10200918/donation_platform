@@ -19,7 +19,16 @@
             <div class="section-box">
               <h3 class="section-title"><span class="title-icon"></span>求助详情</h3>
               <div class="story-content">
-                {{ project.summary }}
+                <p class="summary-text">{{ project.summary }}</p>
+
+                <div v-if="project.picture" class="project-media">
+                  <el-image
+                      :src="project.picture"
+                      :preview-src-list="[project.picture]"
+                      fit="cover"
+                      class="detail-main-img"
+                  />
+                </div>
               </div>
             </div>
 
@@ -453,5 +462,32 @@ onMounted(() => {
 /* 如果是匿名且是捐赠者，依然保持红色 */
 .is-donor-name {
   transition: color 0.3s ease;
+}
+.story-content {
+  line-height: 1.8;
+  color: #4b5563;
+  font-size: 15px;
+}
+
+.summary-text {
+  margin-bottom: 20px;
+  white-space: pre-wrap; /* 保持后端文字的换行 */
+}
+
+.project-media {
+  margin-top: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.detail-main-img {
+  width: 100%;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.detail-main-img:hover {
+  transform: scale(1.02); /* 鼠标悬停轻微放大效果 */
 }
 </style>

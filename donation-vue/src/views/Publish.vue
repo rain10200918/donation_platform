@@ -78,6 +78,29 @@
                 />
               </el-form-item>
 
+              <el-form-item label="上传相关证明/项目封面 (第一张将作为封面)" prop="picture">
+                <div class="upload-grid">
+                  <el-upload
+                      action="http://localhost:8080/file/upload"
+                      :headers="uploadHeaders"
+                      list-type="picture-card"
+                      :on-success="handleUploadSuccess"
+                      :on-remove="handleRemove"
+                      :before-upload="beforeUpload"
+                      :limit="3"
+                      name="file"
+                      accept=".jpg,.jpeg,.png"
+                  >
+                    <el-icon><Plus /></el-icon>
+                    <template #tip>
+                      <div class="el-upload__tip">
+                        请上传医疗证明、身份核实文件或生活照，最多3张。
+                      </div>
+                    </template>
+                  </el-upload>
+                </div>
+              </el-form-item>
+
               <el-form-item label="讲述您的故事" prop="summary">
                 <el-input
                     v-model="form.summary"
@@ -111,9 +134,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive ,computed} from 'vue'
 import { useRouter } from 'vue-router'
-import { Sunny, InfoFilled } from '@element-plus/icons-vue'
+import { Sunny, InfoFilled,Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request.js'
 
@@ -127,7 +150,8 @@ const form = reactive({
   projectType: '',
   targetAmount: 0,
   summary: '',
-  endTime: ''
+  endTime: '',
+  picture: ''
 })
 
 const rules = {
@@ -135,9 +159,36 @@ const rules = {
   projectType: [{ required: true, message: '请选择求助类型', trigger: 'change' }],
   targetAmount: [{ required: true, message: '请填写目标金额', trigger: 'blur' }],
   summary: [{ required: true, message: '请写下您的故事', trigger: 'blur' }],
-  endTime: [{ required: true, message: '请选择截止时间', trigger: 'change' }]
+  endTime: [{ required: true, message: '请选择截止时间', trigger: 'change' }],
+  picture : [{ required: true, message: '请至少上传一张证明图片', trigger: 'change' }]
+}
+const uploadHeaders = computed(() => {
+  const token = sessionStorage.getItem('token');
+  return token ? {
+    'Authorization': `Bearer ${token}`
+  } : {};
+});
+
+const handleUploadSuccess = (res) => {
+  if (res.code === "200") {
+    // 如果是单图，直接赋值
+    form.picture = res.data
+    // 如果需要多图（配合后端），可以用数组 push 再 join(',')
+    ElMessage.success('图片上传成功')
+  }
+}
+const handleRemove = () => {
+  form.picture = ''
+  ElMessage.info('图片已移除')
 }
 
+const beforeUpload = (file) => {
+  const isImg = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isImg) ElMessage.error('只能上传图片格式!')
+  if (!isLt5M) ElMessage.error('图片大小不能超过 5MB!')
+  return isImg && isLt5M
+}
 const disabledDate = (time) => time.getTime() < Date.now()
 
 const submitForm = () => {
@@ -276,5 +327,28 @@ const submitForm = () => {
 }
 :deep(.el-input__wrapper.is-focus), :deep(.el-textarea__inner:focus) {
   border-color: #f56c6c;
+}
+/* 图片上传区域微调 */
+.upload-grid {
+  margin-top: 8px;
+}
+
+:deep(.el-upload-list--picture-card .el-upload-list__item) {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+}
+
+:deep(.el-upload--picture-card) {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background-color: #f9fafb;
+  border: 1px dashed #e5e7eb;
+}
+
+:deep(.el-upload--picture-card:hover) {
+  border-color: #f56c6c;
+  color: #f56c6c;
 }
 </style>

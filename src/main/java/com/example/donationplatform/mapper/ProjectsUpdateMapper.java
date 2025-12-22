@@ -10,4 +10,6 @@ import java.util.List;
 public interface ProjectsUpdateMapper {
     @Select("select * from project_updates where project_id = #{id}")
     List<ProjectUpdates> getAllByProjectId(Long id);
+
+    void save(ProjectUpdates projectUpdates);
 }

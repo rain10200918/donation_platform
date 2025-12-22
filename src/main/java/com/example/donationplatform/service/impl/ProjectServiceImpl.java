@@ -1,5 +1,6 @@
 package com.example.donationplatform.service.impl;
 
+import com.example.donationplatform.dto.AuditDTO;
 import com.example.donationplatform.entity.Projects;
 import com.example.donationplatform.mapper.ProjectsMapper;
 import com.example.donationplatform.service.ProjectService;
@@ -51,5 +52,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public int sumTargetAmount() {
         return projectsMapper.sumTargetAmount();
+    }
+
+    @Override
+    public void updateProjectAuditStatus(AuditDTO dto) {
+        if (dto.getAuditStatus() == 1){
+            projectsMapper.pass(dto);
+        }else if (dto.getAuditStatus() == 2){
+            projectsMapper.reject(dto);
+        }
     }
 }

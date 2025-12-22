@@ -17,4 +17,9 @@ public class ProjectUpdateServiceImpl implements ProjectUpdateService {
         List<ProjectUpdates> allByProjectId = projectsUpdateMapper.getAllByProjectId(id);
         return allByProjectId;
     }
+
+    @Override
+    public void save(ProjectUpdates projectUpdates) {
+        projectsUpdateMapper.save(projectUpdates);
+    }
 }

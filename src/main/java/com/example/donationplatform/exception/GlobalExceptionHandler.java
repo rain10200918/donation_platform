@@ -13,4 +13,9 @@ public class GlobalExceptionHandler {
         log.error("全局异常：", e);
         return Result.error("400", e.getMessage());
     }
+    @ExceptionHandler(ServiceException.class)
+    public Result handleServiceException(ServiceException e) {
+        log.warn("业务异常：{}", e.getMessage());
+        return Result.error(e.getCode(), e.getMessage());
+    }
 }

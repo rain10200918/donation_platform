@@ -1,5 +1,6 @@
 package com.example.donationplatform.service;
 
+import com.example.donationplatform.dto.AuditDTO;
 import com.example.donationplatform.entity.Projects;
 import com.github.pagehelper.PageInfo;
 
@@ -19,4 +20,6 @@ public interface ProjectService {
     int countByStatus(int i);
 
     int sumTargetAmount();
+
+    void updateProjectAuditStatus(AuditDTO dto);
 }

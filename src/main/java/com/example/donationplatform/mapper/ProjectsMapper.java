@@ -1,8 +1,10 @@
 package com.example.donationplatform.mapper;
 
+import com.example.donationplatform.dto.AuditDTO;
 import com.example.donationplatform.entity.Projects;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -22,4 +24,8 @@ public interface ProjectsMapper {
     int countByStatus(int i);
     @Select("select sum(target_amount) from projects")
     int sumTargetAmount();
+    @Update("update projects set audit_status = #{auditStatus} and status=1 where id = #{id}")
+    void pass(AuditDTO dto);
+    @Update("update projects set audit_status = #{auditStatus}, reject_reason = #{rejectReason} where id = #{id}")
+    void reject(AuditDTO dto);
 }

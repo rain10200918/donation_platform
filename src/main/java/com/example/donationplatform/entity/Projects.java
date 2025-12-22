@@ -27,6 +27,9 @@ public class Projects {
     /** 项目标题 */
     private String title;
 
+    /** 图片 */
+    private String picture;
+
     /** 项目摘要描述 */
     private String summary;
 

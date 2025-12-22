@@ -40,10 +40,19 @@
         <el-table-column label="项目基本信息" min-width="300">
           <template #default="{row}">
             <div class="project-info-cell">
-              <div class="project-name">{{ row.title }}</div>
-              <div class="project-sub">
-                <el-tag size="small" effect="plain" type="info" class="id-tag">ID: {{ row.id }}</el-tag>
-                <span class="time-text">提交于: {{ formatDate(row.createTime) }}</span>
+              <div class="project-main-content">
+                <el-image
+                    :src="row.picture"
+                    class="table-thumb"
+                    fit="cover"
+                />
+                <div class="project-text">
+                  <div class="project-name">{{ row.title }}</div>
+                  <div class="project-sub">
+                    <el-tag size="small" effect="plain" type="info" class="id-tag">ID: {{ row.id }}</el-tag>
+                    <span class="time-text">提交于: {{ formatDate(row.createTime) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </template>
@@ -125,9 +134,24 @@
         </div>
 
         <div class="info-section">
-          <h4 class="section-title">申请诉求/背景</h4>
+          <h4 class="section-title">项目材料 / 图片</h4>
+          <div class="project-image-preview">
+            <el-image
+                v-if="currentProject.picture"
+                :src="currentProject.picture"
+                :preview-src-list="[currentProject.picture]"
+                fit="cover"
+                class="detail-img"
+            >
+              <template #error>
+                <div class="image-slot">暂无图片</div>
+              </template>
+            </el-image>
+            <el-empty v-else :image-size="60" description="该项目未上传图片" />
+          </div>
+          <h4 class="section-title">申请诉求 / 背景</h4>
           <div class="summary-content">
-            {{ currentProject.summary }}
+            {{ currentProject.summary || '暂无详细说明' }}
           </div>
         </div>
 
@@ -449,5 +473,43 @@ onMounted(() => {
   background-color: #f8fafc !important;
   color: #475569;
   font-weight: 700;
+}
+/* 表格缩略图 */
+.project-main-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.table-thumb {
+  width: 60px;
+  height: 45px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+/* 弹窗大图展示区域 */
+.project-image-preview {
+  margin-top: 10px;
+  text-align: center;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+.detail-img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 6px;
+  cursor: zoom-in;
+}
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 150px;
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 </style>

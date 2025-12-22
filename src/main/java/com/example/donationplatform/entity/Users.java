@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -54,5 +55,8 @@ public class Users {
 
     /** 角色权限 */
     private String role;
+
+    /** 余额 */
+    private BigDecimal balance;
 }
 

@@ -57,6 +57,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -115,7 +116,6 @@ const handleLogin = async () => {
         }
       } catch (err) {
         console.error(err)
-        ElMessage.error(err.response?.data?.message || '登录失败，请检查账号密码')
       } finally {
         loading.value = false
       }

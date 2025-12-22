@@ -60,41 +60,63 @@
 
           <el-row :gutter="25">
             <el-col :span="8" v-for="p in projects" :key="p.id">
-              <el-card class="modern-card" :body-style="{ padding: '0px' }" @click="goDetail(p.id)">
-                <div class="img-wrapper">
-                  <el-tag class="project-type-tag" :type="getTypeTag(p.projectType)" effect="dark">
-                    {{ getTypeText(p.projectType) }}
-                  </el-tag>
-                  <img :src="getCover(p.projectType)" class="project-image" />
-                  <div class="image-mask"><span>查看详情</span></div>
-                </div>
 
-                <div class="card-info">
-                  <h4 class="project-title">{{ p.title }}</h4>
-                  <p class="project-summary">{{ p.summary }}</p>
+              <el-skeleton :loading="loading" animated>
 
-                  <div class="progress-section">
-                    <div class="progress-text">
-                      <span class="percent-num">{{ calculatePercent(p.raisedAmount, p.targetAmount) }}%</span>
-                      <span class="raised-num">已筹 ¥{{ p.raisedAmount }}</span>
+                <template #template>
+                  <el-card class="modern-card" :body-style="{ padding: '0px' }">
+                    <el-skeleton-item variant="image" style="height: 230px; width: 100%" />
+                    <div style="padding: 25px">
+                      <el-skeleton-item variant="h3" style="width: 60%; margin-bottom: 15px" />
+                      <el-skeleton-item variant="p" style="width: 100%" />
+                      <el-skeleton-item variant="p" style="width: 80%; margin-top: 10px" />
+                      <div style="margin-top: 20px; display: flex; justify-content: space-between">
+                        <el-skeleton-item variant="text" style="width: 30%" />
+                        <el-skeleton-item variant="button" style="width: 20%" />
+                      </div>
                     </div>
-                    <el-progress
-                        :percentage="calculatePercent(p.raisedAmount, p.targetAmount)"
-                        :show-text="false"
-                        :stroke-width="10"
-                        :color="p.status === 2 ? '#67c23a' : '#f56c6c'"
-                    />
-                  </div>
+                  </el-card>
+                </template>
 
-                  <div class="card-footer">
-                    <div class="target-box">
-                      <span class="label">目标金额</span>
-                      <span class="value">¥{{ p.targetAmount }}</span>
+                <template #default>
+                  <el-card class="modern-card" :body-style="{ padding: '0px' }" @click="goDetail(p.id)">
+                    <div class="img-wrapper">
+                      <el-tag class="project-type-tag" :type="getTypeTag(p.projectType)" effect="dark">
+                        {{ getTypeText(p.projectType) }}
+                      </el-tag>
+                      <img :src="displayCover(p)" class="project-image" />
+                      <div class="image-mask"><span>查看详情</span></div>
                     </div>
-                    <el-button type="primary" round class="support-btn">帮助他</el-button>
-                  </div>
-                </div>
-              </el-card>
+
+                    <div class="card-info">
+                      <h4 class="project-title">{{ p.title }}</h4>
+                      <p class="project-summary">{{ p.summary }}</p>
+
+                      <div class="progress-section">
+                        <div class="progress-text">
+                          <span class="percent-num">{{ calculatePercent(p.raisedAmount, p.targetAmount) }}%</span>
+                          <span class="raised-num">已筹 ¥{{ p.raisedAmount }}</span>
+                        </div>
+                        <el-progress
+                            :percentage="calculatePercent(p.raisedAmount, p.targetAmount)"
+                            :show-text="false"
+                            :stroke-width="10"
+                            :color="p.status === 2 ? '#67c23a' : '#f56c6c'"
+                        />
+                      </div>
+
+                      <div class="card-footer">
+                        <div class="target-box">
+                          <span class="label">目标金额</span>
+                          <span class="value">¥{{ p.targetAmount }}</span>
+                        </div>
+                        <el-button type="primary" round class="support-btn">帮助他</el-button>
+                      </div>
+                    </div>
+                  </el-card>
+                </template>
+              </el-skeleton>
+
             </el-col>
           </el-row>
         </div>
@@ -138,9 +160,10 @@ const banners = ref([
     link: '/story/1' // 对应小苹果故事
   }
 ])
-
+const loading = ref(true)
 // 初始化加载数据
 const loadHomeData = async () => {
+  loading.value = true
   try {
     const projectRes = await request.get('/project/page', { params: { page: 1, size: 6 } })
     if (projectRes.code === "200") projects.value = projectRes.data.list
@@ -149,6 +172,10 @@ const loadHomeData = async () => {
     if (userRes.code === "200") userInfo.value = userRes.data
   } catch (err) {
     console.error('加载首页数据失败', err)
+  } finally {
+    setTimeout(() => {
+      loading.value = false // 停止加载，显示真实卡片
+    }, 500)
   }
 }
 
@@ -161,16 +188,24 @@ const calculatePercent = (raised, target) => {
 const getTypeText = (t) => ({ 1: '个人求助', 2: '公益项目', 3: '紧急救助' }[t] || '其他')
 const getTypeTag = (t) => ({ 1: 'warning', 2: 'success', 3: 'danger' }[t] || 'info')
 const getCover = (t) => {
-  const imgs = {
-    1: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=400',
-    2: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=400',
-    3: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=400'
+  const defaultImgs = {
+    1: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=600', // 医疗相关
+    2: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=600', // 公益助学
+    3: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=600'  // 紧急救助
   }
-  return imgs[t] || 'https://via.placeholder.com/400x200'
+  return defaultImgs[t] || 'https://via.placeholder.com/600x400?text=爱心求助'
 }
 
 const goDetail = (id) => router.push(`/project/${id}`)
-
+const displayCover = (row) => {
+  // 如果后端返回了图片字段，且不为空
+  if (row.picture) {
+    // 即使存的是多图(url1,url2)，我们也只取第一张作为首页封面
+    return row.picture.split(',')[0]
+  }
+  // 否则走分类占位图
+  return getCover(row.projectType)
+}
 const handlePublish = async () => {
   const token = sessionStorage.getItem('token')
   if (!token) {

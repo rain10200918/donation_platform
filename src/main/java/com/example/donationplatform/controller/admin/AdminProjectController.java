@@ -1,5 +1,8 @@
 package com.example.donationplatform.controller.admin;
 
+import com.example.donationplatform.annotation.AdminOnly;
+import com.example.donationplatform.dto.AuditDTO;
+import com.example.donationplatform.dto.StatusDTO;
 import com.example.donationplatform.entity.Projects;
 import com.example.donationplatform.entity.Result;
 import com.example.donationplatform.entity.Users;
@@ -20,6 +23,7 @@ public class AdminProjectController {
     @Autowired
     private UsersService usersService;
     @GetMapping("/project/list")
+    @AdminOnly
     public Result page(@RequestParam(defaultValue = "2") String status ,@RequestParam Integer pageNum, @RequestParam Integer pageSize){
         if (pageSize == null || pageSize < 1 || pageSize > 100){
             return Result.error("页大小不能小于1或大于100");
@@ -28,6 +32,7 @@ public class AdminProjectController {
         return Result.success(byStatus);
     }
     @GetMapping("/project/stats")
+    @AdminOnly
     public Result getProjectStats(){
         Map<String, Object> stats = new HashMap<>();
         stats.put("pendingCount", projectService.countByStatus(0));
@@ -37,6 +42,7 @@ public class AdminProjectController {
         return Result.success(stats);
     }
     @GetMapping("/user/list")
+    @AdminOnly
     public Result getUserList(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -51,15 +57,30 @@ public class AdminProjectController {
     }
 
     @PostMapping("/user/status")
+    @AdminOnly
     public Result updateUserStatus(
-            @RequestParam Long userId,
-            @RequestParam String status
+           @RequestBody StatusDTO dto
     ){
-        return null;
+        usersService.updateUserStatus(dto);
+        return Result.success("更新成功");
     }
     @GetMapping("/user/{id}")
+    @AdminOnly
     public Result detailUser(@PathVariable Long id){
         return null;
     }
-
+    @PostMapping("/project/audit")
+    @AdminOnly
+    public Result auditProject(
+            @RequestBody AuditDTO dto
+    ){
+        if (dto.getAuditStatus() == null){
+            return Result.error("请选择审核状态");
+        }
+        if (dto.getAuditStatus() == 2 && dto.getRejectReason() == null){
+            return Result.error("请填写拒绝理由");
+        }
+        projectService.updateProjectAuditStatus(dto);
+        return Result.success("审核成功");
+    }
 }

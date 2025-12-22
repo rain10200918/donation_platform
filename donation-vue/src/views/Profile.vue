@@ -4,6 +4,7 @@
 
     <div class="profile-container">
       <el-row :gutter="25">
+
         <el-col :span="8">
           <el-card class="user-main-card" shadow="hover">
             <div class="user-avatar-wrapper">
@@ -41,6 +42,19 @@
                 <el-icon><LocationFilled /></el-icon>
                 <span>注册 IP：{{ userInfo.lastLoginIp === '0:0:0:0:0:0:0:1' ? '127.0.0.1' : userInfo.lastLoginIp }}</span>
               </div>
+            </div>
+          </el-card>
+
+          <el-card class="balance-card" shadow="hover">
+            <div class="balance-header">
+              <span class="label">账户可用余额</span>
+              <el-button type="primary" link @click="rechargeVisible = true">
+                <el-icon><Plus /></el-icon>充值
+              </el-button>
+            </div>
+            <div class="balance-amount">
+              <span class="currency">¥</span>
+              <span class="value">{{ (userInfo.balance || 0).toFixed(2) }}</span>
             </div>
           </el-card>
 
@@ -140,7 +154,6 @@
                       <el-tooltip v-if="scope.row.auditStatus === 2" :content="'驳回原因：' + (scope.row.rejectReason || '资料不全')" placement="top">
                         <el-tag type="danger" effect="dark" round style="cursor: help">审核驳回</el-tag>
                       </el-tooltip>
-
                       <el-tag v-else :type="getStatusTag(scope.row.status, scope.row.auditStatus)" effect="plain" round>
                         {{ getStatusText(scope.row.status, scope.row.auditStatus) }}
                       </el-tag>
@@ -151,17 +164,14 @@
                     <template #default="scope">
                       <template v-if="scope.row.auditStatus === 1 && (scope.row.status === 1 || scope.row.status === 2)">
                         <el-button size="small" link type="primary" @click="router.push(`/project/${scope.row.id}`)">详情</el-button>
-                        <el-button v-if="scope.row.status === 1" size="small" link type="success" @click="handleUpdateProgress">更新</el-button>
+                        <el-button v-if="scope.row.status === 1" size="small" link type="success" @click="handleUpdateProgress(scope.row)">更新</el-button>
                       </template>
-
                       <span v-else-if="scope.row.auditStatus === 0" class="op-status-text">
                         <el-icon><Timer /></el-icon> 审核中
                       </span>
-
                       <el-button v-else-if="scope.row.auditStatus === 2" size="small" type="danger" link @click="handleEditProject(scope.row)">
                         重新修改
                       </el-button>
-
                       <span v-else-if="scope.row.status === 3" class="op-status-text">已关闭</span>
                     </template>
                   </el-table-column>
@@ -173,15 +183,70 @@
         </el-col>
       </el-row>
     </div>
+
+    <el-dialog v-model="rechargeVisible" title="账户充值" width="360px" class="recharge-dialog" align-center>
+      <div class="recharge-body">
+        <p class="recharge-tip">请选择充值金额 (模拟测试)</p>
+        <el-radio-group v-model="rechargeAmount" class="recharge-grid">
+          <el-radio-button :label="10">10元</el-radio-button>
+          <el-radio-button :label="50">50元</el-radio-button>
+          <el-radio-button :label="100">100元</el-radio-button>
+          <el-radio-button :label="500">500元</el-radio-button>
+        </el-radio-group>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="rechargeVisible = false" round>取消</el-button>
+          <el-button type="danger" :loading="rechargeLoading" @click="handleRecharge" round class="btn-full-width">
+            立即充值
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="editDialogVisible" title="修改个人资料" width="500px">
+      <el-form :model="editForm" label-width="80px" label-position="top">
+        <el-form-item label="我的头像">
+          <el-upload
+              class="avatar-uploader"
+              action="http://localhost:8080/file/upload"
+              :headers="uploadHeaders"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload"
+              name="file"
+          >
+            <img v-if="editForm.avatar" :src="editForm.avatar" class="avatar-edit-preview" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            <template #tip>
+              <div class="el-upload__tip">支持 jpg/png/jpeg，尺寸建议为正方形</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="用户昵称">
+          <el-input v-model="editForm.nickName" maxlength="20" show-word-limit />
+        </el-form-item>
+        <el-form-item label="电子邮箱">
+          <el-input v-model="editForm.email" placeholder="example@mail.com" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitEdit">保存修改</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Calendar, LocationFilled, Postcard, List, Trophy,
-  CircleCheckFilled, WarningFilled, Timer
+  CircleCheckFilled, WarningFilled, Timer, Plus
 } from '@element-plus/icons-vue'
 import request from '../utils/request.js'
 import { ElMessage } from 'element-plus'
@@ -194,7 +259,61 @@ const userInfo = ref({})
 const authInfo = ref(null)
 const myProjects = ref([])
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+const editDialogVisible = ref(false)
+const submitLoading = ref(false)
+const rechargeVisible = ref(false)
+const rechargeAmount = ref(10)
+const rechargeLoading = ref(false)
+const editForm = ref({
+  id: null,
+  nickName: '',
+  email: '',
+  avatar: ''
+})
+const uploadHeaders = {
+  Authorization: `Bearer ${sessionStorage.getItem('token')}`
+}
+const beforeAvatarUpload = (rawFile) => {
+  const allowTypes = ['image/jpeg', 'image/png', 'image/jpg']
+  if (!allowTypes.includes(rawFile.type)) {
+    ElMessage.error('图片格式不正确！')
+    return false
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+  return true
+}
+const handleRecharge = async () => {
+  rechargeLoading.value = true
+  try {
+    // 这里的接口路径需要根据你的后端真实 Controller 路径修改
+    const res = await request.post('/user/recharge', {
+      amount: rechargeAmount.value
+    })
 
+    if (res.code === "200") {
+      ElMessage.success(`充值成功！当前余额：¥${res.data.balance || userInfo.value.balance + rechargeAmount.value}`)
+      rechargeVisible.value = false
+      // 刷新用户信息以同步余额显示
+      fetchUserInfo()
+    }
+  } catch (err) {
+    console.error('充值失败', err)
+  } finally {
+    rechargeLoading.value = false
+  }
+}
+// 上传成功后的回调
+const handleAvatarSuccess = (response) => {
+  if (response.code === "200") {
+    // 假设你的后端 Result.success(url) 返回的数据在 data 字段
+    editForm.value.avatar = response.data
+    ElMessage.success('上传成功')
+  } else {
+    ElMessage.error(response.msg || '上传失败')
+  }
+}
 // 数据加载
 const fetchUserInfo = async () => {
   try {
@@ -234,15 +353,50 @@ const getStatusTag = (s, audit) => {
 const formatDate = (d) => d ? d.replace('T', ' ').split('.')[0] : '-'
 const calculatePercent = (r, t) => t ? Math.min(Math.floor((r / t) * 100), 100) : 0
 
-// 操作逻辑
-const handleEdit = () => ElMessage.info('详细资料修改功能暂未开放')
+
 const handleAuth = () => router.push('/user-auth')
-const handleUpdateProgress = () => ElMessage.success('请在项目详情页发布进展公告')
+const handleUpdateProgress = (project) => {
+  router.push({
+    path: '/update-progress',
+    query: { projectId: project.id, title: project.title }
+  })
+}
 const handleEditProject = (project) => {
   ElMessage.warning('请联系管理员或在发布页重新提交申请')
   // 如果你有编辑页，可以执行：router.push(`/publish?editId=${project.id}`)
 }
+// 1. 点击“修改信息”按钮时，初始化表单
+const handleEdit = () => {
+  editForm.value = {
+    id: userInfo.value.id,
+    nickName: userInfo.value.nickName,
+    email: userInfo.value.email,
+    avatar: userInfo.value.avatar
+  }
+  editDialogVisible.value = true
+}
 
+// 2. 提交修改到后端
+const submitEdit = async () => {
+  if (!editForm.value.nickName) {
+    return ElMessage.warning('昵称不能为空')
+  }
+
+  submitLoading.value = true
+  try {
+    const res = await request.post('/user/update', editForm.value)
+    if (res.code === "200") {
+      ElMessage.success('个人资料已更新')
+      editDialogVisible.value = false
+      // 重新拉取一次用户信息以刷新页面显示
+      fetchUserInfo()
+    }
+  } catch (err) {
+    // 错误已被拦截器处理
+  } finally {
+    submitLoading.value = false
+  }
+}
 onMounted(() => {
   fetchUserInfo()
   fetchAuthInfo()
@@ -295,4 +449,117 @@ onMounted(() => {
 .prog-box { display: flex; flex-direction: column; gap: 4px; }
 .prog-num { font-size: 12px; font-weight: bold; color: #f56c6c; }
 .op-status-text { font-size: 13px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.avatar-uploader {
+  text-align: center;
+  cursor: pointer;
+}
+
+.avatar-edit-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed #dcdfe6;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  transition: 0.2s;
+  width: 100px;
+  height: 100px;
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #f56c6c;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+}
+/* 余额卡片基础样式 */
+.balance-card {
+  margin-top: 20px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.balance-header .label {
+  font-size: 13px;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #f56c6c; /* 与主题色保持一致 */
+}
+
+.balance-amount .currency {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.balance-amount .value {
+  font-size: 36px;
+  font-weight: 800;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 充值对话框样式 */
+.recharge-body {
+  padding: 10px 0;
+}
+
+.recharge-tip {
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+}
+
+.recharge-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+/* 强制修改 radio-button 样式使其撑满网格 */
+.recharge-grid :deep(.el-radio-button) {
+  width: 100%;
+}
+.recharge-grid :deep(.el-radio-button__inner) {
+  width: 100%;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 15px 0;
+}
+
+.btn-full-width {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.recharge-dialog :deep(.el-dialog) {
+  border-radius: 20px;
+}
 </style>

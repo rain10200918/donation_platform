@@ -8,10 +8,10 @@
         <div class="search-bar-wrapper">
           <el-input
               v-model="queryParams.title"
-              placeholder="搜索项目标题、求助人或关键词..."
+              placeholder="搜索项目标题..."
               size="large"
               clearable
-              @keyup.enter="handleSearch"
+              @clear="handleSearch"  @keyup.enter="handleSearch"
               class="search-input"
           >
             <template #append>
@@ -54,7 +54,14 @@
                 <el-tag :type="getTypeTag(p.projectType)" class="floating-tag" effect="dark">
                   {{ getTypeText(p.projectType) }}
                 </el-tag>
-                <img :src="p.cover || getCover(p.projectType)" class="project-img" />
+
+                <img
+                    :src="displayCover(p)"
+                    class="project-img"
+                    loading="lazy"
+                    @error="(e) => e.target.src = getCover(p.projectType)"
+                />
+
                 <div class="img-overlay" v-if="p.status === 2">
                   <div class="success-seal">已完成</div>
                 </div>
@@ -156,9 +163,20 @@ const getCover = (t) => {
     2: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400',
     3: 'https://images.unsplash.com/photo-1461532257246-777de18cd58b?w=400'
   }
-  return imgs[t]
+  return imgs[t] || 'https://via.placeholder.com/400x200?text=爱心互助'
 }
-
+const displayCover = (row) => {
+  // 如果后端有 picture 字段且不为空
+  if (row.picture) {
+    return row.picture.split(',')[0] // 取多图中的第一张
+  }
+  // 其次看原本是否有 cover 字段
+  if (row.cover) {
+    return row.cover
+  }
+  // 最后保底使用分类默认图
+  return getCover(row.projectType)
+}
 onMounted(fetchProjects)
 </script>
 

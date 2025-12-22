@@ -64,7 +64,13 @@
             <template #default="scope">
               <div class="project-info-cell">
                 <div class="image-container">
-                  <el-image :src="getCover(scope.row.projectType)" class="project-thumb" />
+                  <el-image
+                      :src="displayCover(scope.row)"
+                      class="project-thumb"
+                      fit="cover"
+                      :preview-src-list="scope.row.picture ? scope.row.picture.split(',') : [getCover(scope.row.projectType)]"
+                      preview-teleported
+                  />
                   <div class="type-mini-tag">{{ getTypeText(scope.row.projectType) }}</div>
                 </div>
                 <div class="project-detail">
@@ -174,15 +180,23 @@ const getTypeText = (t) => ({ 1: '个人', 2: '公益', 3: '紧急' }[t] || '其
 const formatDate = (s) => s ? s.replace('T', ' ').split(':')[0] : '-'
 
 const getCover = (type) => {
-  const imgs = {
-    1: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=160',
-    2: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=160',
-    3: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=160'
+  const defaultImgs = {
+    1: 'https://via.placeholder.com/160x100?text=个人求助',
+    2: 'https://via.placeholder.com/160x100?text=公益项目',
+    3: 'https://via.placeholder.com/160x100?text=紧急救援'
   }
-  return imgs[type] || 'https://via.placeholder.com/160x100'
+  return defaultImgs[type] || 'https://via.placeholder.com/160x100?text=爱心筹'
 }
 
-const openProgressDialog = (p) => ElMessage.info(`请在详情页点击“发布进展”公告`)
+// 获取封面图：如果有图片则取第一张，如果没有则返回分类默认图
+const displayCover = (row) => {
+  if (row.picture) {
+    // 兼容多图模式，按逗号分割取第一张
+    return row.picture.split(',')[0]
+  }
+  return getCover(row.projectType)
+}
+const openProgressDialog = (p) => router.push(`/update-progress?projectId=${p.id}&title=${p.title}`)
 const handleEdit = (p) => router.push(`/publish?id=${p.id}`)
 
 onMounted(fetchMyProjects)

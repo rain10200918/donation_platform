@@ -66,13 +66,16 @@
 
             <el-dropdown trigger="click" class="user-dropdown">
               <div class="avatar-wrapper">
-                <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-                <span class="user-name">系统管理员</span>
+                <el-avatar
+                    :size="32"
+                    :src="adminInfo.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
+                />
+                <span class="user-name">{{ adminInfo.nickName }}</span>
                 <el-icon><ArrowDown /></el-icon>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item icon="User">个人中心</el-dropdown-item>
+                  <el-dropdown-item icon="User" @click="router.push('/admin/profile')">个人中心</el-dropdown-item>
                   <el-dropdown-item divided icon="SwitchButton" @click="handleLogout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -95,18 +98,34 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed ,onMounted} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Box, DataLine, Checked, UserFilled, Setting,
   Expand, Fold, Monitor, ArrowDown, User, SwitchButton
 } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import request from '@/utils/request.js'
 
 const route = useRoute()
 const router = useRouter()
 const isCollapse = ref(false)
-
+const adminInfo = ref({
+  nickName: '载入中...',
+  avatar: '' // 初始为空
+})
+const fetchAdminInfo = async () => {
+  try {
+    // 假设后端接口为 /user/info，且能通过 Token 识别管理员身份
+    const res = await request.get('/user/info')
+    if (res.code === "200") {
+      adminInfo.value = res.data
+    }
+  } catch (err) {
+    console.error('获取管理员信息失败', err)
+    ElMessage.error('无法连接服务器获取管理员资料')
+  }
+}
 // 动态计算面包屑
 const currentMenuName = computed(() => {
   const menuMap = {
@@ -132,6 +151,9 @@ const handleLogout = () => {
     ElMessage.success('已安全退出')
   })
 }
+onMounted(() => {
+  fetchAdminInfo()
+})
 </script>
 
 <style scoped>
